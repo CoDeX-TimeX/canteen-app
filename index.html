@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen Menu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Gwalior Canteen</h1>
+        <p>Order food directly to your table</p>
+    </div>
+
+    <div id="menu-container" class="menu-grid">
+    </div>
+
+    <div class="cart-section">
+        <div class="cart-summary">
+            <span class="total-text">Total Bill</span>
+            <span class="total-amount">₹<span id="total-price">0</span></span>
+        </div>
+
+        <ul id="cart-items" style="display:none;"></ul>
+
+        <button onclick="generateOrder()">Place Order &gt;</button>
+    </div>
+
+    <script src="menu.js"></script>
+    <script>
+        let cart = [];
+
+        function displayMenu() {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+
+            if (typeof menuItems === 'undefined') {
+                container.innerHTML = '<p>Error: DB not found.</p>';
+                return;
+            }
+
+            menuItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'menu-item';
+
+                // Note the change here: Image, then Details, then Button
+                itemDiv.innerHTML = `
+                    <div class="item-icon">${item.image}</div>
+                    <div class="item-details">
+                        <h3>${item.name}</h3>
+                        <p class="price">₹${item.price}</p>
+                    </div>
+                    <button class="add-btn" onclick="addToCart(${item.id})">ADD</button>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function addToCart(id) {
+            const item = menuItems.find(i => i.id === id);
+            cart.push(item);
+
+            // Animation feedback
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Added";
+            btn.style.background = "#2e7d32";
+            btn.style.color = "white";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = "white";
+                btn.style.color = "#2e7d32";
+            }, 500);
+
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const totalSpan = document.getElementById('total-price');
+            let total = 0;
+            cart.forEach(item => total += item.price);
+            totalSpan.innerText = total;
+        }
+
+        // --- UPDATED CHECKOUT FUNCTION ---
+        // --- UPDATED SEQUENTIAL ORDER LOGIC ---
+        function generateOrder() {
+            if (cart.length === 0) {
+                alert("Cart is empty!");
+                return;
+            }
+
+            // 1. Calculate Total
+            let total = 0;
+            cart.forEach(item => total += item.price);
+
+            // 2. GET THE NEXT ORDER ID
+            // We check if we already have a counter saved. If not, start at 100.
+            let currentOrderId = localStorage.getItem("canteen_order_counter");
+
+            if (!currentOrderId) {
+                currentOrderId = 100; // First order of the day
+            } else {
+                currentOrderId = parseInt(currentOrderId) + 1; // Increment by 1
+            }
+
+            // Save the new number back to memory for the NEXT person
+            localStorage.setItem("canteen_order_counter", currentOrderId);
+
+            // 3. Save current order details for the receipt page
+            localStorage.setItem("canteen_cart", JSON.stringify(cart));
+            localStorage.setItem("canteen_total", total);
+            localStorage.setItem("canteen_id", currentOrderId);
+
+            // 4. Go to the receipt page
+            window.location.href = "order.html";
+        }
+
+
+
+        displayMenu();
+    </script>
+
+    <button onclick="resetDailyCounter()" style="margin-top: 50px; opacity: 0.3; font-size: 10px;">
+        (Manager Only: Reset Counter)
+    </button>
+
+    <script>
+        function resetDailyCounter() {
+            const password = prompt("Enter Manager Password to reset Order ID to 100:");
+            if (password === "admin123") { // You can change this password
+                localStorage.setItem("canteen_order_counter", 99); // Sets it so next one is 100
+                alert("Counter reset! Next order will be #100.");
+            } else {
+                alert("Wrong password!");
+            }
+        }
+    </script>
+
+</body>
+
+</html>

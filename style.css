@@ -1,0 +1,153 @@
+/* style.css - MOBILE LIST VERSION */
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    padding-bottom: 80px;
+    /* Space for the sticky cart */
+}
+
+/* 1. Mobile Header */
+.header {
+    background-color: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #000;
+}
+
+.header p {
+    margin: 5px 0 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* 2. The List Container */
+.menu-grid {
+    max-width: 600px;
+    /* Keeps it looking like an app on desktop */
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* 3. The List Item (Row) */
+.menu-item {
+    display: flex;
+    /* Puts items in a row: Image -> Text -> Button */
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-bottom: 1px solid #f0f0f0;
+    /* The thin line between items */
+}
+
+/* The Emoji/Image */
+.item-icon {
+    font-size: 2.5em;
+    width: 60px;
+    text-align: center;
+    background: #f9f9f9;
+    border-radius: 10px;
+    padding: 5px;
+    margin-right: 15px;
+}
+
+/* The Name and Price */
+.item-details {
+    flex-grow: 1;
+    /* Takes up all available middle space */
+}
+
+.item-details h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.price {
+    margin: 0;
+    color: #444;
+    font-size: 0.95em;
+}
+
+/* The "Add" Button */
+.add-btn {
+    background-color: #fff;
+    color: #2e7d32;
+    /* Zomato/Swiggy Green */
+    border: 1px solid #dcdcdc;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: 0.2s;
+}
+
+.add-btn:active {
+    background-color: #2e7d32;
+    color: white;
+    transform: scale(0.95);
+}
+
+/* 4. The Sticky Cart (Bottom Bar) */
+.cart-section {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    border-top: 1px solid #eee;
+    padding: 15px;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+/* We hide the detailed list in the footer to save space on mobile */
+#cart-items {
+    display: none;
+}
+
+.cart-summary {
+    display: flex;
+    flex-direction: column;
+}
+
+.total-text {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.total-amount {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #000;
+}
+
+/* Checkout Button */
+button[onclick="generateOrder()"] {
+    background-color: #fc8019;
+    /* Swiggy Orange */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+}
