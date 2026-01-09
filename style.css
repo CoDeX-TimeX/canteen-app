@@ -248,3 +248,49 @@ button[onclick="generateOrder()"] {
     font-weight: bold;
     cursor: pointer;
 }
+
+/* --- NEW SWIGGY-STYLE BUTTONS FOR MENU --- */
+
+.qty-control-menu {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #2e7d32;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    height: 36px;
+    width: 90px; /* Fixed width so it doesn't jump */
+    justify-content: space-between;
+}
+
+.qty-btn-menu {
+    background: white;
+    color: #2e7d32;
+    border: none;
+    font-size: 1.2em;
+    width: 30px;
+    height: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.qty-btn-menu:active {
+    background-color: #e8f5e9;
+}
+
+.qty-count-menu {
+    font-weight: bold;
+    color: #2e7d32;
+    font-size: 1em;
+}
+
+/* Hide the old Add button if the counter is showing */
+.add-btn {
+    height: 36px; /* Match height of counter */
+    width: 90px;
+}
+
