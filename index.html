@@ -16,7 +16,7 @@
     </div>
 
     <div id="menu-container" class="menu-grid">
-    </div>
+        </div>
 
     <div class="cart-section">
         <div class="cart-summary">
@@ -26,16 +26,18 @@
 
         <ul id="cart-items" style="display:none;"></ul>
 
-        <button onclick="generateOrder()">Place Order &gt;</button>
+        <button onclick="goToCart()">View Cart &gt;</button>
     </div>
 
     <script src="menu.js"></script>
     <script>
-        let cart = [];
+        // 1. Load Cart from Memory on Start
+        let cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
 
+        // 2. Display the Menu
         function displayMenu() {
             const container = document.getElementById('menu-container');
-            container.innerHTML = '';
+            container.innerHTML = ''; // Clear current list to rebuild it
 
             if (typeof menuItems === 'undefined') {
                 container.innerHTML = '<p>Error: DB not found.</p>';
@@ -46,82 +48,105 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'menu-item';
 
-                // Note the change here: Image, then Details, then Button
+                // Check how many of THIS item are in the cart
+                const qty = getQty(item.id);
+
+                // Decide: Show "ADD" button OR " - 1 + " controls?
+                let buttonHTML = '';
+                
+                if (qty === 0) {
+                    // Show normal ADD button
+                    buttonHTML = `<button class="add-btn" onclick="addOne(${item.id})">ADD</button>`;
+                } else {
+                    // Show Counter Control
+                    buttonHTML = `
+                        <div class="qty-control-menu">
+                            <button class="qty-btn-menu" onclick="removeOne(${item.id})">−</button>
+                            <span class="qty-count-menu">${qty}</span>
+                            <button class="qty-btn-menu" onclick="addOne(${item.id})">+</button>
+                        </div>
+                    `;
+                }
+                
+                // Build the Card
                 itemDiv.innerHTML = `
                     <div class="item-icon">${item.image}</div>
                     <div class="item-details">
                         <h3>${item.name}</h3>
                         <p class="price">₹${item.price}</p>
                     </div>
-                    <button class="add-btn" onclick="addToCart(${item.id})">ADD</button>
+                    ${buttonHTML}
                 `;
                 container.appendChild(itemDiv);
             });
+            
+            updateTotalBar();
         }
 
-        function addToCart(id) {
+        // --- HELPER FUNCTIONS ---
+
+        // Count how many of a specific item we have
+        function getQty(id) {
+            return cart.filter(i => i.id === id).length;
+        }
+
+        // Add 1 item
+        function addOne(id) {
             const item = menuItems.find(i => i.id === id);
             cart.push(item);
-
-            // Animation feedback
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "Added";
-            btn.style.background = "#2e7d32";
-            btn.style.color = "white";
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.background = "white";
-                btn.style.color = "#2e7d32";
-            }, 500);
-
-            updateCartDisplay();
+            saveAndRefresh();
         }
 
-        function updateCartDisplay() {
+        // Remove 1 item
+        function removeOne(id) {
+            // Find index of first matching item
+            const index = cart.findIndex(i => i.id === id);
+            if (index > -1) {
+                cart.splice(index, 1); // Remove it
+            }
+            saveAndRefresh();
+        }
+
+        // Save to memory and refresh the screen
+        function saveAndRefresh() {
+            localStorage.setItem("canteen_cart", JSON.stringify(cart));
+            displayMenu(); // Re-draw buttons (so "ADD" turns into "- 1 +")
+            updateTotalBar(); // Update the price at the bottom
+        }
+
+        // Update the Bottom Bar
+        function updateTotalBar() {
             const totalSpan = document.getElementById('total-price');
             let total = 0;
             cart.forEach(item => total += item.price);
             totalSpan.innerText = total;
         }
 
-                // --- UPDATED BUTTON LOGIC ---
-        function generateOrder() {
-            // Instead of creating the order immediately, we just save and go to Review
+        // Go to Cart Page
+        function goToCart() {
             if (cart.length === 0) {
                 alert("Cart is empty!");
                 return;
             }
-
-            // Save the current list
-            localStorage.setItem("canteen_cart", JSON.stringify(cart));
-            
-            // Go to the Edit/Review Page
             window.location.href = "cart.html";
         }
 
-
-
-
+        // Start the App
         displayMenu();
     </script>
 
     <button onclick="resetDailyCounter()" style="margin-top: 50px; opacity: 0.3; font-size: 10px;">
         (Manager Only: Reset Counter)
     </button>
-
     <script>
         function resetDailyCounter() {
-            const password = prompt("Enter Manager Password to reset Order ID to 100:");
-            if (password === "admin123") { // You can change this password
-                localStorage.setItem("canteen_order_counter", 99); // Sets it so next one is 100
-                alert("Counter reset! Next order will be #100.");
-            } else {
-                alert("Wrong password!");
+            const password = prompt("Enter Manager Password:");
+            if (password === "admin123") { 
+                localStorage.setItem("canteen_order_counter", 99); 
+                alert("Counter reset!");
             }
         }
     </script>
-
 </body>
 
 </html>
