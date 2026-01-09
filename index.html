@@ -85,39 +85,21 @@
             totalSpan.innerText = total;
         }
 
-        // --- UPDATED CHECKOUT FUNCTION ---
-        // --- UPDATED SEQUENTIAL ORDER LOGIC ---
+                // --- UPDATED BUTTON LOGIC ---
         function generateOrder() {
+            // Instead of creating the order immediately, we just save and go to Review
             if (cart.length === 0) {
                 alert("Cart is empty!");
                 return;
             }
 
-            // 1. Calculate Total
-            let total = 0;
-            cart.forEach(item => total += item.price);
-
-            // 2. GET THE NEXT ORDER ID
-            // We check if we already have a counter saved. If not, start at 100.
-            let currentOrderId = localStorage.getItem("canteen_order_counter");
-
-            if (!currentOrderId) {
-                currentOrderId = 100; // First order of the day
-            } else {
-                currentOrderId = parseInt(currentOrderId) + 1; // Increment by 1
-            }
-
-            // Save the new number back to memory for the NEXT person
-            localStorage.setItem("canteen_order_counter", currentOrderId);
-
-            // 3. Save current order details for the receipt page
+            // Save the current list
             localStorage.setItem("canteen_cart", JSON.stringify(cart));
-            localStorage.setItem("canteen_total", total);
-            localStorage.setItem("canteen_id", currentOrderId);
-
-            // 4. Go to the receipt page
-            window.location.href = "order.html";
+            
+            // Go to the Edit/Review Page
+            window.location.href = "cart.html";
         }
+
 
 
 
