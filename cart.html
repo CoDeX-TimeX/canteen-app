@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Order</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="header">
+        <h1>🛒 Review Cart</h1>
+        <p>Adjust quantities before ordering</p>
+    </div>
+
+    <div class="cart-container">
+        <div id="cart-list">
+            </div>
+
+        <div class="final-total">
+            Total: ₹<span id="final-total">0</span>
+        </div>
+
+        <div class="action-buttons">
+            <a href="index.html" class="btn-back">Add Items</a>
+            <button class="btn-confirm" onclick="confirmOrder()">Confirm Order ✅</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. Load Data
+        // We use the same "cart" list we saved in index.html
+        let cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
+
+        // 2. Render the List
+        function renderCart() {
+            const container = document.getElementById("cart-list");
+            const totalSpan = document.getElementById("final-total");
+            container.innerHTML = "";
+
+            if (cart.length === 0) {
+                container.innerHTML = "<p style='text-align:center; padding:20px;'>Your cart is empty!</p>";
+                totalSpan.innerText = "0";
+                return;
+            }
+
+            // GROUP ITEMS: We need to count duplicates (e.g. "Tea": 2)
+            // We create a map where Key = Item ID, Value = Count
+            const counts = {};
+            const uniqueItems = {};
+
+            cart.forEach(item => {
+                counts[item.id] = (counts[item.id] || 0) + 1;
+                uniqueItems[item.id] = item; // Keep a reference to the item details
+            });
+
+            // Calculate Total
+            let total = 0;
+            cart.forEach(item => total += item.price);
+            totalSpan.innerText = total;
+
+            // Generate HTML for each unique item
+            Object.keys(uniqueItems).forEach(id => {
+                const item = uniqueItems[id];
+                const count = counts[id];
+                const itemTotal = item.price * count;
+
+                const row = document.createElement("div");
+                row.className = "cart-item";
+                row.innerHTML = `
+                    <div class="cart-item-info">
+                        <h3>${item.image} ${item.name}</h3>
+                        <p>₹${item.price} each</p>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                        <span class="qty-display">${count}</span>
+                        <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // 3. Logic to Add/Remove Items
+        function updateQty(id, change) {
+            if (change === 1) {
+                // Add one more of this item
+                const item = cart.find(i => i.id == id);
+                cart.push(item);
+            } else {
+                // Remove one instance of this item
+                const index = cart.findIndex(i => i.id == id);
+                if (index > -1) {
+                    cart.splice(index, 1);
+                }
+            }
+
+            // Save and Refresh
+            localStorage.setItem("canteen_cart", JSON.stringify(cart));
+            renderCart();
+        }
+
+        // 4. Final Confirm -> Go to Receipt
+        function confirmOrder() {
+            if (cart.length === 0) {
+                alert("Cart is empty!");
+                return;
+            }
+
+            // Calculate Final Total one last time
+            let total = 0;
+            cart.forEach(item => total += item.price);
+
+            // Generate Order ID (or keep existing one if we want)
+            // Let's stick to the daily counter logic
+            let currentOrderId = localStorage.getItem("canteen_order_counter");
+            if (!currentOrderId) {
+                currentOrderId = 100; 
+            } else {
+                currentOrderId = parseInt(currentOrderId) + 1;
+            }
+            localStorage.setItem("canteen_order_counter", currentOrderId);
+
+            // Save data for the Receipt Page
+            localStorage.setItem("canteen_total", total);
+            localStorage.setItem("canteen_id", currentOrderId);
+            
+            // Go to Order Page
+            window.location.href = "order.html";
+        }
+
+        // Run on load
+        renderCart();
+    </script>
+</body>
+</html>
