@@ -1,243 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Gwalia</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            margin: 0;
-            padding: 0;
-            padding-bottom: 80px;
-        }
-
+        body { font-family: 'Poppins', sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 0; padding-bottom: 80px; }
+        
         /* 1. LOGIN SCREEN */
         #login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 3000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 3000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-
-        input {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background: #222;
-            color: white;
-            margin-bottom: 15px;
-            width: 200px;
-            text-align: center;
-            font-size: 1.1em;
-        }
-
-        .btn-primary {
-            background: #ff9f1c;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 1em;
-        }
+        input { padding: 12px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; margin-bottom: 15px; width: 200px; text-align: center; font-size: 1.1em;}
+        .btn-primary { background: #ff9f1c; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; }
 
         /* 2. HEADER & DASHBOARD */
         .header {
-            background: #1e1e1e;
-            padding: 20px;
+            background: #1e1e1e; padding: 20px;
             border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .header h2 {
-            margin: 0;
-            color: #ff9f1c;
-            font-size: 1.2em;
-        }
-
-        .container {
-            padding: 20px;
-        }
+        .header h2 { margin: 0; color: #ff9f1c; font-size: 1.2em; }
+        
+        .container { padding: 20px; }
 
         /* Stats Cards */
         .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;
         }
-
         .stat-card {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            text-align: center;
+            background: #1e1e1e; padding: 15px; border-radius: 12px;
+            border: 1px solid #333; text-align: center;
         }
-
-        .stat-val {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #2ec4b6;
-            margin: 5px 0;
-        }
-
-        .stat-label {
-            font-size: 0.8em;
-            color: #888;
-        }
+        .stat-val { font-size: 1.8em; font-weight: bold; color: #2ec4b6; margin: 5px 0; }
+        .stat-label { font-size: 0.8em; color: #888; }
 
         /* History Section */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .filter-select {
-            background: #1e1e1e;
-            color: white;
-            border: 1px solid #333;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
         .history-list {
-            background: #1e1e1e;
-            border-radius: 12px;
-            border: 1px solid #333;
-            overflow: hidden;
+            background: #1e1e1e; border-radius: 12px; border: 1px solid #333; overflow: hidden;
         }
-
         .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; border-bottom: 1px solid #333;
         }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
+        .history-item:last-child { border-bottom: none; }
+        
         /* 3. FLOATING SCAN BUTTON (FAB) */
         .fab-scan {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background: #ff9f1c;
-            color: white;
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: fixed; bottom: 25px; right: 25px;
+            background: #ff9f1c; color: white;
+            width: 65px; height: 65px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
             box-shadow: 0 4px 15px rgba(255, 159, 28, 0.4);
-            cursor: pointer;
-            z-index: 1000;
-            font-size: 24px;
-            border: none;
+            cursor: pointer; z-index: 1000; font-size: 24px; border: none;
         }
 
-        .fab-scan:active {
-            transform: scale(0.95);
-        }
-
-        /* 4. SCANNER MODAL (Hidden by default) */
+        /* 4. SCANNER MODAL */
         #scanner-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 2000;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 2000;
+            flex-direction: column; align-items: center; justify-content: center;
         }
-
-        #reader {
-            width: 100%;
-            max-width: 400px;
-            border: 2px solid #555;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
+        #reader { width: 100%; max-width: 400px; border: 2px solid #555; border-radius: 10px; overflow: hidden; }
+        
         .close-scanner {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #333;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
+            position: absolute; top: 20px; right: 20px;
+            background: #333; color: white; border: none; padding: 10px 20px;
+            border-radius: 20px; font-weight: bold; cursor: pointer;
         }
 
         /* 5. CONFIRMATION POPUPS */
         .action-popup {
-            display: none;
-            background: #2a2a2a;
-            padding: 20px;
-            border-radius: 12px;
-            width: 85%;
-            max-width: 320px;
-            text-align: center;
-            border-left: 5px solid #ff9f1c;
-            margin-top: 20px;
+            display: none; background: #2a2a2a; padding: 20px; border-radius: 12px;
+            width: 85%; max-width: 320px; text-align: center;
+            border-left: 5px solid #ff9f1c; margin-top: 20px;
+        }
+        
+        /* --- NEW: ITEM LIST STYLE --- */
+        .scanned-items-list {
+            background: #222; padding: 10px; border-radius: 8px;
+            text-align: left; margin: 10px 0; max-height: 100px; overflow-y: auto;
+            border: 1px dashed #555; font-size: 0.9em; color: #ffeb3b;
         }
 
         .token-popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            color: black;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            z-index: 3000;
-            width: 85%;
-            max-width: 320px;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; color: black; padding: 30px; border-radius: 15px;
+            text-align: center; z-index: 3000; width: 85%; max-width: 320px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
-
-        .token-number {
-            font-size: 5em;
-            font-weight: bold;
-            color: #ff9f1c;
-            display: block;
-            line-height: 1;
-            margin: 10px 0;
-        }
+        .token-number { font-size: 5em; font-weight: bold; color: #ff9f1c; display: block; line-height: 1; margin: 10px 0; }
     </style>
 </head>
-
 <body>
 
     <div id="login-screen">
@@ -247,7 +106,7 @@
     </div>
 
     <div id="main-app" style="display:none;">
-
+        
         <div class="header">
             <h2>Gwalia Dashboard</h2>
             <span style="font-size:0.8em; color:#777;" id="current-date">--</span>
@@ -267,10 +126,6 @@
 
             <div class="section-header">
                 <span style="font-weight:bold; color:#ccc;">Recent Orders</span>
-                <select class="filter-select" onchange="alert('Filter feature coming soon!')">
-                    <option>Today</option>
-                    <option>This Month</option>
-                </select>
             </div>
 
             <div class="history-list" id="history-list">
@@ -285,19 +140,21 @@
         <button class="close-scanner" onclick="closeScanner()">Close X</button>
         <div style="color:white; margin-bottom:10px; font-weight:bold;">Scan Student QR</div>
         <div id="reader"></div>
-
+        
         <div id="scan-result" class="action-popup">
             <h3 style="margin:0; color:#fff;">Order Found</h3>
-            <p id="scanned-ref" style="color:#aaa; font-family:monospace; margin:5px 0;"></p>
-            <div style="font-size: 1.5em; font-weight: bold; margin: 15px 0; color:white;">
+            
+            <p id="scanned-ref" style="color:#aaa; font-family:monospace; margin:5px 0; font-size:0.8em;"></p>
+            
+            <div id="scanned-items-display" class="scanned-items-list">
+                </div>
+
+            <div style="font-size: 1.5em; font-weight: bold; margin: 10px 0; color:white;">
                 ₹<span id="scan-amount">0</span>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button onclick="resetScanner()"
-                    style="flex:1; padding:10px; border-radius:5px; border:none; background:#444; color:white;">Discard</button>
-                <button onclick="generateTokenAndSave()"
-                    style="flex:1; padding:10px; border-radius:5px; border:none; background:#2ec4b6; color:white; font-weight:bold;">✅
-                    Accept</button>
+                <button onclick="resetScanner()" style="flex:1; padding:10px; border-radius:5px; border:none; background:#444; color:white;">Discard</button>
+                <button onclick="generateTokenAndSave()" style="flex:1; padding:10px; border-radius:5px; border:none; background:#2ec4b6; color:white; font-weight:bold;">✅ Accept</button>
             </div>
         </div>
     </div>
@@ -306,8 +163,7 @@
         <div style="font-weight:bold; color:#333; text-transform:uppercase;">Order Accepted</div>
         <div style="font-size:0.9em; color:#666; margin-top:5px;">TOKEN NUMBER</div>
         <span class="token-number" id="big-token-num">0</span>
-        <button onclick="closeTokenPopup()"
-            style="background:#333; color:white; padding:12px 30px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Done</button>
+        <button onclick="closeTokenPopup()" style="background:#333; color:white; padding:12px 30px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Done</button>
     </div>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -336,54 +192,70 @@
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', dateOptions);
 
         // 2. LOGIN
-        window.checkLogin = function () {
-            if (document.getElementById('admin-pass').value === "admin123") {
+        window.checkLogin = function() {
+            if(document.getElementById('admin-pass').value === "admin123") {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
-                listenToOrders(); // Start loading data immediately
+                listenToOrders(); 
             } else { alert("Wrong PIN"); }
         }
 
-        // 3. SCANNER LOGIC (Open/Close)
-        window.openScanner = function () {
+        // 3. SCANNER LOGIC
+        window.openScanner = function() {
             document.getElementById('scanner-modal').style.display = 'flex';
-            if (!html5QrcodeScanner) {
+            if(!html5QrcodeScanner) {
                 html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
                 html5QrcodeScanner.render(onScanSuccess);
             }
         }
 
-        window.closeScanner = function () {
+        window.closeScanner = function() {
             document.getElementById('scanner-modal').style.display = 'none';
             document.getElementById('scan-result').style.display = 'none';
-            // Note: We don't stop the scanner instance to make reopening faster, 
-            // but in a real app you might want to .clear() to save battery.
         }
 
         function onScanSuccess(decodedText) {
-            // Pause scanning visually
             document.getElementById('scan-result').style.display = 'block';
-
+            
+            // 1. Extract Amount
             const match = decodedText.match(/TOTAL: ₹(\d+)/);
             currentAmount = match ? parseInt(match[1]) : 0;
             currentScannedText = decodedText;
+            
+            // 2. Extract Ref Code
+            const lines = decodedText.split('\n');
+            document.getElementById('scanned-ref').innerText = lines[0]; // "REF: 1234..."
 
-            document.getElementById('scanned-ref').innerText = decodedText.split('\n')[0];
+            // 3. Extract ITEMS (The lines between "---" and "---")
+            const itemsDiv = document.getElementById('scanned-items-display');
+            itemsDiv.innerHTML = "";
+            
+            let isReadingItems = false;
+            for(let line of lines) {
+                if(line.includes("TOTAL:")) break; // Stop at total
+                if(isReadingItems && line.trim() !== "" && !line.includes("---")) {
+                    // This is an item line (e.g., "Maggi x2")
+                    itemsDiv.innerHTML += `<div>${line}</div>`;
+                }
+                if(line.includes("----")) {
+                    isReadingItems = true; // Start reading after first dashed line
+                }
+            }
+            
             document.getElementById('scan-amount').innerText = currentAmount;
         }
 
-        window.resetScanner = function () {
+        window.resetScanner = function() {
             document.getElementById('scan-result').style.display = 'none';
-            // Scanner continues running in background
         }
 
         // 4. TOKEN & SAVE LOGIC
-        window.generateTokenAndSave = async function () {
-            if (currentAmount === 0) { alert("Error: No Amount found"); return; }
+        window.generateTokenAndSave = async function() {
+            if(currentAmount === 0) { alert("Error: No Amount found"); return; }
 
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
+            today.setHours(0,0,0,0);
+            
             const q = query(collection(db, "orders"), where("timestamp", ">=", today), orderBy("timestamp", "desc"), limit(1));
             let newTokenNumber = 101;
 
@@ -391,7 +263,7 @@
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     const lastOrder = querySnapshot.docs[0].data();
-                    if (lastOrder.token) newTokenNumber = lastOrder.token + 1;
+                    if(lastOrder.token) newTokenNumber = lastOrder.token + 1;
                 }
 
                 await addDoc(collection(db, "orders"), {
@@ -402,31 +274,23 @@
                     status: "preparing"
                 });
 
-                // Show Token Popup
                 document.getElementById('scanner-modal').style.display = 'none';
                 document.getElementById('token-display').style.display = 'block';
                 document.getElementById('big-token-num').innerText = newTokenNumber;
-
-                // Cleanup Scanner UI
                 document.getElementById('scan-result').style.display = 'none';
 
-            } catch (e) { console.error(e); alert("Error: " + e.message); }
+            } catch(e) { console.error(e); alert("Error: " + e.message); }
         }
 
-        window.closeTokenPopup = function () {
+        window.closeTokenPopup = function() {
             document.getElementById('token-display').style.display = 'none';
         }
 
-        // 5. DATA DASHBOARD LOGIC
+        // 5. DASHBOARD STATS
         function listenToOrders() {
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const q = query(
-                collection(db, "orders"),
-                where("timestamp", ">=", today),
-                orderBy("timestamp", "desc")
-            );
+            today.setHours(0,0,0,0);
+            const q = query(collection(db, "orders"), where("timestamp", ">=", today), orderBy("timestamp", "desc"));
 
             onSnapshot(q, (snapshot) => {
                 let total = 0;
@@ -434,17 +298,17 @@
                 const listDiv = document.getElementById('history-list');
                 listDiv.innerHTML = "";
 
-                if (snapshot.empty) {
+                if(snapshot.empty) {
                     listDiv.innerHTML = "<div style='padding:20px; text-align:center; color:#555;'>No orders today</div>";
                 }
 
                 snapshot.forEach(doc => {
                     const d = doc.data();
                     total += d.amount;
-                    if (d.token > maxToken) maxToken = d.token;
+                    if(d.token > maxToken) maxToken = d.token;
 
-                    // Add to List
-                    const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+                    const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Now';
+                    
                     const item = document.createElement('div');
                     item.className = 'history-item';
                     item.innerHTML = `
@@ -463,5 +327,4 @@
         }
     </script>
 </body>
-
 </html>
