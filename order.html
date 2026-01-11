@@ -3,32 +3,38 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Order Receipt</title>
+    <link rel="stylesheet" href="style.css">
     <style>
+        /* Specific Receipt Styles */
         body {
-            font-family: 'Courier New', Courier, monospace;
-            /* Receipt Font */
-            background-color: #eee;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
+            /* Uses the variables from style.css so the background is dark in dark mode */
+            background-color: var(--bg-color);
+            background-image: var(--bg-pattern);
         }
 
         .receipt-card {
             background: white;
+            /* Always white for contrast */
             padding: 30px;
-            width: 300px;
+            width: 320px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border-top: 5px solid #ff5722;
-            /* Orange top */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-top: 6px solid #ff9f1c;
+            /* Gwalia Orange */
             position: relative;
+            border-radius: 5px;
+            color: #333;
+            /* Always dark text inside receipt */
+            font-family: 'Courier New', Courier, monospace;
         }
 
-        /* The jagged edge at bottom of receipt */
+        /* Jagged Edge */
         .receipt-card::after {
             content: "";
             position: absolute;
@@ -43,13 +49,8 @@
         h1 {
             margin: 0;
             font-size: 1.5em;
-        }
-
-        .order-id {
-            font-size: 1.2em;
+            font-family: 'Poppins', sans-serif;
             font-weight: bold;
-            margin: 10px 0;
-            color: #333;
         }
 
         .divider {
@@ -57,11 +58,10 @@
             margin: 15px 0;
         }
 
-        /* The List of Items */
         .item-list {
             text-align: left;
             margin-bottom: 15px;
-            font-size: 0.9em;
+            font-size: 0.95em;
         }
 
         .list-row {
@@ -71,28 +71,30 @@
         }
 
         .total {
-            font-size: 1.3em;
+            font-size: 1.4em;
             font-weight: bold;
             color: #2e7d32;
         }
 
-        /* The QR Code Image */
         #qr-image {
             margin-top: 15px;
-            width: 150px;
-            height: 150px;
+            width: 200px;
+            height: 200px;
+            mix-blend-mode: multiply;
+            /* Blends nicely */
         }
 
         .home-btn {
-            display: inline-block;
-            margin-top: 20px;
+            display: block;
+            margin-top: 30px;
             text-decoration: none;
-            background: #333;
+            background: #1b263b;
             color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: sans-serif;
-            font-size: 0.8em;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: bold;
+            font-size: 0.9em;
         }
     </style>
 </head>
@@ -100,8 +102,18 @@
 <body>
 
     <div class="receipt-card">
-        <h1>Gwalior Canteen</h1>
-        <div class="order-id">Order #<span id="display-id">0000</span></div>
+        <h1>Gwalia Canteen</h1>
+        <p style="margin:0; font-size:0.8em; color:#666;">Nirma University</p>
+
+        <div style="color:#777; font-size:0.85em; text-transform: uppercase; margin-top:10px; letter-spacing:1px;">
+            Reference Code
+        </div>
+
+        <div
+            style="font-size: 1.4em; font-weight: bold; color: #333; font-family: 'Courier New', monospace; margin-bottom: 10px;">
+            <span id="display-id">--:--</span>
+        </div>
+
         <div class="divider"></div>
 
         <div id="order-items" class="item-list">
@@ -110,57 +122,62 @@
         <div class="divider"></div>
         <div class="total">Total: ₹<span id="display-total">0</span></div>
 
-        <p style="font-size: 0.8em; color: #666; margin-top:10px;">Scan to Pay via UPI</p>
+        <p style="font-size: 0.8em; color: #555; margin-top:15px; font-family:'Poppins', sans-serif;">
+            Show this QR at Counter
+        </p>
 
-        <img id="qr-image" src="" alt="Payment QR">
+        <img id="qr-image" src="" alt="Order QR">
 
         <br>
         <a href="index.html" class="home-btn" onclick="clearData()">Start New Order</a>
     </div>
 
     <script>
-        // 1. Get Data from Memory
+        // --- THEME CHECK ---
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // 1. Get Data
         const cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
         const total = localStorage.getItem("canteen_total") || 0;
-        const orderId = localStorage.getItem("canteen_id") || "0000";
+        // Default to "----" if no ID is found
+        const orderId = localStorage.getItem("canteen_id") || "----";
 
-        // 2. Display the Info on Screen
+        // 2. Display Info
         document.getElementById("display-id").innerText = orderId;
         document.getElementById("display-total").innerText = total;
 
         const listContainer = document.getElementById("order-items");
 
-        // We will build a text string for the QR code while we display the list
-        let qrData = `ORDER #${orderId}\n----------------\n`;
+        // --- UPDATED QR LOGIC ---
+        // Changed "ORDER #" to "REF:" to match our plan
+        let qrData = `REF: ${orderId}\n----------------\n`;
 
         cart.forEach(item => {
-            // Add to the visual list
             const row = document.createElement("div");
             row.className = "list-row";
-            row.innerHTML = `<span>${item.name}</span> <span>₹${item.price}</span>`;
+            row.innerHTML = `<span>${item.name}</span> <span>${item.price}</span>`;
             listContainer.appendChild(row);
 
-            // Add to the QR Code text
-            qrData += `${item.name}: ₹${item.price}\n`;
+            qrData += `${item.name}: ${item.price}\n`;
         });
 
-        qrData += `----------------\nTOTAL: ₹${total}\n[VERIFIED ORDER]`;
+        qrData += `----------------\nTOTAL: ₹${total}\n[VERIFIED]`;
 
-        // 3. GENERATE THE ORDER QR CODE
-        // We encode the text so it can be turned into a QR image
-        // The manager scans this and sees the text immediately.
-
-        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
-
+        // 3. GENERATE QR
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
         document.getElementById("qr-image").src = qrApiUrl;
 
-        // 4. Clear Data function (Same as before)
+        // 4. Clear Data
         function clearData() {
             localStorage.removeItem("canteen_cart");
             localStorage.removeItem("canteen_total");
             localStorage.removeItem("canteen_id");
         }
     </script>
+
 </body>
 
 </html>
