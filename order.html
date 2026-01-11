@@ -142,7 +142,6 @@
         // 1. Get Data
         const cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
         const total = localStorage.getItem("canteen_total") || 0;
-        // Default to "----" if no ID is found
         const orderId = localStorage.getItem("canteen_id") || "----";
 
         // 2. Display Info
@@ -151,20 +150,42 @@
 
         const listContainer = document.getElementById("order-items");
 
-        // --- UPDATED QR LOGIC ---
-        // Changed "ORDER #" to "REF:" to match our plan
-        let qrData = `REF: ${orderId}\n----------------\n`;
-
+        // --- NEW: GROUPING LOGIC ---
+        // We count how many of each item exist
+        const itemCounts = {};
+        
         cart.forEach(item => {
-            const row = document.createElement("div");
-            row.className = "list-row";
-            row.innerHTML = `<span>${item.name}</span> <span>${item.price}</span>`;
-            listContainer.appendChild(row);
-
-            qrData += `${item.name}: ${item.price}\n`;
+            if (itemCounts[item.name]) {
+                itemCounts[item.name].count++;
+                itemCounts[item.name].price += item.price; // Add to subtotal for that item
+            } else {
+                itemCounts[item.name] = {
+                    count: 1,
+                    price: item.price,
+                    unitPrice: item.price
+                };
+            }
         });
 
-        qrData += `----------------\nTOTAL: ₹${total}\n[VERIFIED]`;
+        // --- BUILD DISPLAY & QR DATA ---
+        let qrData = `REF: ${orderId}\n----------------\n`;
+
+        // Loop through the grouped items
+        for (const [name, details] of Object.entries(itemCounts)) {
+            const row = document.createElement("div");
+            row.className = "list-row";
+            
+            // If count > 1, show "x2"
+            const nameDisplay = details.count > 1 ? `${name} x${details.count}` : name;
+            
+            row.innerHTML = `<span>${nameDisplay}</span> <span>${details.price}</span>`;
+            listContainer.appendChild(row);
+
+            // Add to QR Text
+            qrData += `${name} x${details.count}\n`;
+        }
+
+        qrData += `----------------\nTOTAL: ₹${total}`;
 
         // 3. GENERATE QR
         const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
@@ -181,3 +202,4 @@
 </body>
 
 </html>
+
