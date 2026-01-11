@@ -1,137 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Order</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Review Cart</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div class="header">
-        <h1>🛒 Review Cart</h1>
-        <p>Adjust quantities before ordering</p>
+        <div class="brand-row" style="margin-bottom:0;">
+            <div class="brand-text">
+                <h1>🛒 Your Cart</h1>
+                <p>Review items before ordering</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
     </div>
 
-    <div class="cart-container">
-        <div id="cart-list">
-            </div>
+    <div class="cart-container" style="padding: 20px; max-width: 600px; margin: 0 auto;">
 
-        <div class="final-total">
-            Total: ₹<span id="final-total">0</span>
+        <div id="cart-list">
         </div>
 
-        <div class="action-buttons">
-            <a href="index.html" class="btn-back">Add Items</a>
-            <button class="btn-confirm" onclick="confirmOrder()">Confirm Order ✅</button>
+        <div
+            style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); margin-top: 20px; border: 1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; color: var(--text-sub);">
+                <span>Item Total</span>
+                <span>₹<span id="sub-total">0</span></span>
+            </div>
+            <div
+                style="display:flex; justify-content:space-between; font-size: 1.3em; font-weight: bold; color: var(--text-main); border-top: 1px dashed var(--border); padding-top: 10px;">
+                <span>To Pay</span>
+                <span style="color: var(--primary);">₹<span id="final-total">0</span></span>
+            </div>
+        </div>
+
+        <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 30px;">
+            <a href="index.html" class="btn-back"
+                style="flex:1; text-align:center; padding: 15px; border-radius: 12px; background: var(--bg-color); color: var(--text-main); text-decoration:none; font-weight:600; border: 1px solid var(--border);">Add
+                More</a>
+
+            <button class="btn-confirm" onclick="confirmOrder()"
+                style="flex:2; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 15px rgba(255, 159, 28, 0.3);">
+                Confirm Order ✅
+            </button>
         </div>
     </div>
 
     <script>
-        // 1. Load Data
-        // We use the same "cart" list we saved in index.html
+        // --- THEME LOGIC ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const btn = document.getElementById('themeBtn');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                btn.innerText = '☀️';
+            } else {
+                btn.innerText = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+        }
+
+        // --- CART LOGIC ---
         let cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
 
-        // 2. Render the List
         function renderCart() {
             const container = document.getElementById("cart-list");
-            const totalSpan = document.getElementById("final-total");
+            const finalSpan = document.getElementById("final-total");
+            const subSpan = document.getElementById("sub-total");
             container.innerHTML = "";
 
             if (cart.length === 0) {
-                container.innerHTML = "<p style='text-align:center; padding:20px;'>Your cart is empty!</p>";
-                totalSpan.innerText = "0";
+                container.innerHTML = "<p style='text-align:center; color: var(--text-sub); padding:40px;'>Your cart is empty!</p>";
+                finalSpan.innerText = "0";
+                subSpan.innerText = "0";
                 return;
             }
 
-            // GROUP ITEMS: We need to count duplicates (e.g. "Tea": 2)
-            // We create a map where Key = Item ID, Value = Count
+            // Group Items
             const counts = {};
             const uniqueItems = {};
-
             cart.forEach(item => {
                 counts[item.id] = (counts[item.id] || 0) + 1;
-                uniqueItems[item.id] = item; // Keep a reference to the item details
+                uniqueItems[item.id] = item;
             });
 
-            // Calculate Total
+            // Calc Total
             let total = 0;
             cart.forEach(item => total += item.price);
-            totalSpan.innerText = total;
+            finalSpan.innerText = total;
+            subSpan.innerText = total;
 
-            // Generate HTML for each unique item
+            // Generate HTML
             Object.keys(uniqueItems).forEach(id => {
                 const item = uniqueItems[id];
                 const count = counts[id];
-                const itemTotal = item.price * count;
 
                 const row = document.createElement("div");
-                row.className = "cart-item";
+                // Styling inline here to ensure it overrides defaults cleanly
+                row.style = "display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: var(--shadow); border: 1px solid var(--border);";
+
                 row.innerHTML = `
-                    <div class="cart-item-info">
-                        <h3>${item.image} ${item.name}</h3>
-                        <p>₹${item.price} each</p>
+                    <div style="display:flex; align-items:center; gap: 15px;">
+                        <span style="font-size: 2em;">${item.image}</span>
+                        <div>
+                            <h3 style="margin:0; font-size:1em; color: var(--text-main);">${item.name}</h3>
+                            <p style="margin:2px 0 0; color: var(--primary); font-weight:600;">₹${item.price}</p>
+                        </div>
                     </div>
-                    <div class="quantity-controls">
-                        <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
-                        <span class="qty-display">${count}</span>
-                        <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                    
+                    <div class="qty-control-menu" style="width: 100px;">
+                        <button class="qty-btn-menu" onclick="updateQty(${item.id}, -1)">−</button>
+                        <span class="qty-count-menu">${count}</span>
+                        <button class="qty-btn-menu" onclick="updateQty(${item.id}, 1)">+</button>
                     </div>
                 `;
                 container.appendChild(row);
             });
         }
 
-        // 3. Logic to Add/Remove Items
         function updateQty(id, change) {
             if (change === 1) {
-                // Add one more of this item
                 const item = cart.find(i => i.id == id);
                 cart.push(item);
             } else {
-                // Remove one instance of this item
                 const index = cart.findIndex(i => i.id == id);
-                if (index > -1) {
-                    cart.splice(index, 1);
-                }
+                if (index > -1) cart.splice(index, 1);
             }
-
-            // Save and Refresh
             localStorage.setItem("canteen_cart", JSON.stringify(cart));
             renderCart();
         }
 
-        // 4. Final Confirm -> Go to Receipt
         function confirmOrder() {
             if (cart.length === 0) {
                 alert("Cart is empty!");
                 return;
             }
 
-            // Calculate Final Total one last time
+            // --- NEW: SMART REFERENCE CODE GENERATION ---
+            // 1. Get Time parts
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0'); // e.g., "15"
+            const mins = String(now.getMinutes()).padStart(2, '0'); // e.g., "30"
+            const secs = String(now.getSeconds()).padStart(2, '0'); // e.g., "45"
+
+            // 2. Add 2 Random Digits (00-99) for extra safety
+            const random = Math.floor(Math.random() * 100);
+            const randomStr = String(random).padStart(2, '0');
+
+            // 3. Combine them: HHMMSS-RR
+            // Example Result: "153045-99"
+            const uniqueRefCode = `${hours}${mins}${secs}-${randomStr}`;
+
+            // Save everything
             let total = 0;
             cart.forEach(item => total += item.price);
 
-            // Generate Order ID (or keep existing one if we want)
-            // Let's stick to the daily counter logic
-            let currentOrderId = localStorage.getItem("canteen_order_counter");
-            if (!currentOrderId) {
-                currentOrderId = 100; 
-            } else {
-                currentOrderId = parseInt(currentOrderId) + 1;
-            }
-            localStorage.setItem("canteen_order_counter", currentOrderId);
-
-            // Save data for the Receipt Page
             localStorage.setItem("canteen_total", total);
-            localStorage.setItem("canteen_id", currentOrderId);
-            
-            // Go to Order Page
+            localStorage.setItem("canteen_id", uniqueRefCode); // Save the smart code
+
+            // Go to Receipt
             window.location.href = "order.html";
         }
 
-        // Run on load
+        initTheme(); // Start
         renderCart();
     </script>
 </body>
+
 </html>
