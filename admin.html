@@ -46,8 +46,9 @@
         }
         .history-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px; border-bottom: 1px solid #333;
+            padding: 15px; border-bottom: 1px solid #333; cursor: pointer; transition: background 0.2s;
         }
+        .history-item:active { background: #333; }
         .history-item:last-child { border-bottom: none; }
         
         /* 3. FLOATING SCAN BUTTON (FAB) */
@@ -74,18 +75,17 @@
             border-radius: 20px; font-weight: bold; cursor: pointer;
         }
 
-        /* 5. CONFIRMATION POPUPS */
+        /* 5. POPUPS (Action & Detail) */
         .action-popup {
             display: none; background: #2a2a2a; padding: 20px; border-radius: 12px;
             width: 85%; max-width: 320px; text-align: center;
             border-left: 5px solid #ff9f1c; margin-top: 20px;
         }
         
-        /* --- NEW: ITEM LIST STYLE --- */
         .scanned-items-list {
             background: #222; padding: 10px; border-radius: 8px;
-            text-align: left; margin: 10px 0; max-height: 100px; overflow-y: auto;
-            border: 1px dashed #555; font-size: 0.9em; color: #ffeb3b;
+            text-align: left; margin: 10px 0; max-height: 150px; overflow-y: auto;
+            border: 1px dashed #555; font-size: 0.9em; color: #ffeb3b; font-family: monospace;
         }
 
         .token-popup {
@@ -95,6 +95,21 @@
             box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
         .token-number { font-size: 5em; font-weight: bold; color: #ff9f1c; display: block; line-height: 1; margin: 10px 0; }
+
+        /* --- NEW: ORDER DETAIL MODAL --- */
+        #detail-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2500;
+            justify-content: center; align-items: center;
+        }
+        .detail-card {
+            background: #1e1e1e; width: 85%; max-width: 350px;
+            border-radius: 12px; padding: 20px; border: 1px solid #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .detail-header { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;}
+        .detail-title { color: #ff9f1c; font-weight: bold; font-size: 1.2em; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; color: #ccc; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -126,6 +141,7 @@
 
             <div class="section-header">
                 <span style="font-weight:bold; color:#ccc;">Recent Orders</span>
+                <span style="font-size:0.8em; color:#777;">(Tap to view)</span>
             </div>
 
             <div class="history-list" id="history-list">
@@ -143,12 +159,8 @@
         
         <div id="scan-result" class="action-popup">
             <h3 style="margin:0; color:#fff;">Order Found</h3>
-            
             <p id="scanned-ref" style="color:#aaa; font-family:monospace; margin:5px 0; font-size:0.8em;"></p>
-            
-            <div id="scanned-items-display" class="scanned-items-list">
-                </div>
-
+            <div id="scanned-items-display" class="scanned-items-list"></div>
             <div style="font-size: 1.5em; font-weight: bold; margin: 10px 0; color:white;">
                 ₹<span id="scan-amount">0</span>
             </div>
@@ -164,6 +176,33 @@
         <div style="font-size:0.9em; color:#666; margin-top:5px;">TOKEN NUMBER</div>
         <span class="token-number" id="big-token-num">0</span>
         <button onclick="closeTokenPopup()" style="background:#333; color:white; padding:12px 30px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Done</button>
+    </div>
+
+    <div id="detail-modal">
+        <div class="detail-card">
+            <div class="detail-header">
+                <span class="detail-title">Token #<span id="detail-token">--</span></span>
+                <button onclick="document.getElementById('detail-modal').style.display='none'" style="background:none; border:none; color:white; font-size:1.2em;">✕</button>
+            </div>
+            <div class="detail-row">
+                <span>Time:</span>
+                <span id="detail-time" style="color:white;">--</span>
+            </div>
+            <div class="detail-row">
+                <span>Status:</span>
+                <span style="color:#2ec4b6; font-weight:bold;">Paid ✅</span>
+            </div>
+            <hr style="border-color:#333; margin: 15px 0;">
+            <div style="font-size:0.9em; color:#888; margin-bottom:5px;">Items Ordered:</div>
+            
+            <div id="detail-items" class="scanned-items-list" style="max-height: 200px;">
+                </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:15px; font-weight:bold; font-size:1.2em;">
+                <span>Total</span>
+                <span style="color:#ff9f1c;">₹<span id="detail-total">0</span></span>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -217,29 +256,23 @@
         function onScanSuccess(decodedText) {
             document.getElementById('scan-result').style.display = 'block';
             
-            // 1. Extract Amount
             const match = decodedText.match(/TOTAL: ₹(\d+)/);
             currentAmount = match ? parseInt(match[1]) : 0;
             currentScannedText = decodedText;
             
-            // 2. Extract Ref Code
+            // Extract Ref and Items
             const lines = decodedText.split('\n');
-            document.getElementById('scanned-ref').innerText = lines[0]; // "REF: 1234..."
+            document.getElementById('scanned-ref').innerText = lines[0]; 
 
-            // 3. Extract ITEMS (The lines between "---" and "---")
             const itemsDiv = document.getElementById('scanned-items-display');
             itemsDiv.innerHTML = "";
-            
             let isReadingItems = false;
             for(let line of lines) {
-                if(line.includes("TOTAL:")) break; // Stop at total
+                if(line.includes("TOTAL:")) break;
                 if(isReadingItems && line.trim() !== "" && !line.includes("---")) {
-                    // This is an item line (e.g., "Maggi x2")
                     itemsDiv.innerHTML += `<div>${line}</div>`;
                 }
-                if(line.includes("----")) {
-                    isReadingItems = true; // Start reading after first dashed line
-                }
+                if(line.includes("----")) isReadingItems = true;
             }
             
             document.getElementById('scan-amount').innerText = currentAmount;
@@ -249,12 +282,10 @@
             document.getElementById('scan-result').style.display = 'none';
         }
 
-        // 4. TOKEN & SAVE LOGIC
+        // 4. TOKEN & SAVE
         window.generateTokenAndSave = async function() {
             if(currentAmount === 0) { alert("Error: No Amount found"); return; }
-
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const today = new Date(); today.setHours(0,0,0,0);
             
             const q = query(collection(db, "orders"), where("timestamp", ">=", today), orderBy("timestamp", "desc"), limit(1));
             let newTokenNumber = 101;
@@ -286,10 +317,9 @@
             document.getElementById('token-display').style.display = 'none';
         }
 
-        // 5. DASHBOARD STATS
+        // 5. HISTORY LIST & DETAIL MODAL
         function listenToOrders() {
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const today = new Date(); today.setHours(0,0,0,0);
             const q = query(collection(db, "orders"), where("timestamp", ">=", today), orderBy("timestamp", "desc"));
 
             onSnapshot(q, (snapshot) => {
@@ -306,9 +336,10 @@
                     const d = doc.data();
                     total += d.amount;
                     if(d.token > maxToken) maxToken = d.token;
-
+                    
                     const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Now';
                     
+                    // Create List Item
                     const item = document.createElement('div');
                     item.className = 'history-item';
                     item.innerHTML = `
@@ -318,12 +349,40 @@
                         </div>
                         <div style="color:#2ec4b6; font-weight:bold;">+₹${d.amount}</div>
                     `;
+                    
+                    // Make it Clickable!
+                    item.addEventListener('click', () => {
+                        openDetailModal(d, time);
+                    });
+                    
                     listDiv.appendChild(item);
                 });
 
                 document.getElementById('daily-total').innerText = total;
                 document.getElementById('last-token').innerText = maxToken > 0 ? maxToken : "--";
             });
+        }
+
+        // --- NEW: PARSE AND OPEN DETAIL MODAL ---
+        function openDetailModal(data, time) {
+            document.getElementById('detail-modal').style.display = 'flex';
+            document.getElementById('detail-token').innerText = data.token;
+            document.getElementById('detail-time').innerText = time;
+            document.getElementById('detail-total').innerText = data.amount;
+
+            // Parse Items again from raw text
+            const lines = data.raw_text.split('\n');
+            const itemsDiv = document.getElementById('detail-items');
+            itemsDiv.innerHTML = "";
+            
+            let isReadingItems = false;
+            for(let line of lines) {
+                if(line.includes("TOTAL:")) break;
+                if(isReadingItems && line.trim() !== "" && !line.includes("---")) {
+                    itemsDiv.innerHTML += `<div>${line}</div>`;
+                }
+                if(line.includes("----")) isReadingItems = true;
+            }
         }
     </script>
 </body>
