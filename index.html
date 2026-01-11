@@ -3,149 +3,211 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canteen Menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gwalia Canteen | Nirma</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
     <div class="header">
-        <h1>Gwalior Canteen</h1>
-        <p>Order food directly to your table</p>
+        <div class="brand-row">
+            <div class="logo-section">
+                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" alt="Logo" class="logo-img">
+                <div class="brand-text">
+                    <h1>Gwalia Canteen</h1>
+                    <p>Nirma University</p>
+                </div>
+            </div>
+
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+                🌙
+            </button>
+        </div>
+
+        <input type="text" id="searchBar" class="search-box" placeholder="Search for food..." onkeyup="filterMenu()">
     </div>
 
-    <div id="menu-container" class="menu-grid">
+    <div id="category-nav" class="category-nav"></div>
+
+    <div id="main-menu"></div>
+
+    <div class="cart-section" id="cart-bar" style="display:none;">
+        <div>
+            <span style="font-size:0.8em; opacity:0.8;">Total Bill</span><br>
+            <span style="font-size:1.2em; font-weight:bold;">₹<span id="total-price">0</span></span>
+            <span style="font-size:0.8em; margin-left:5px;">(<span id="total-items">0</span> items)</span>
         </div>
-
-    <div class="cart-section">
-        <div class="cart-summary">
-            <span class="total-text">Total Bill</span>
-            <span class="total-amount">₹<span id="total-price">0</span></span>
-        </div>
-
-        <ul id="cart-items" style="display:none;"></ul>
-
         <button onclick="goToCart()">View Cart &gt;</button>
     </div>
 
     <script src="menu.js"></script>
     <script>
-        // 1. Load Cart from Memory on Start
+        // --- THEME LOGIC (Dark/Light) ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const btn = document.getElementById('themeBtn');
+
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                btn.innerText = '☀️'; // Change icon to Sun
+            } else {
+                btn.innerText = '🌙'; // Change icon to Moon
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeBtn');
+
+            body.classList.toggle('dark-mode');
+
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                btn.innerText = '☀️';
+            } else {
+                localStorage.setItem('theme', 'light');
+                btn.innerText = '🌙';
+            }
+        }
+
+        // --- EXISTING APP LOGIC ---
         let cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
 
-        // 2. Display the Menu
-        function displayMenu() {
-            const container = document.getElementById('menu-container');
-            container.innerHTML = ''; // Clear current list to rebuild it
-
-            if (typeof menuItems === 'undefined') {
-                container.innerHTML = '<p>Error: DB not found.</p>';
-                return;
-            }
-
-            menuItems.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'menu-item';
-
-                // Check how many of THIS item are in the cart
-                const qty = getQty(item.id);
-
-                // Decide: Show "ADD" button OR " - 1 + " controls?
-                let buttonHTML = '';
-                
-                if (qty === 0) {
-                    // Show normal ADD button
-                    buttonHTML = `<button class="add-btn" onclick="addOne(${item.id})">ADD</button>`;
-                } else {
-                    // Show Counter Control
-                    buttonHTML = `
-                        <div class="qty-control-menu">
-                            <button class="qty-btn-menu" onclick="removeOne(${item.id})">−</button>
-                            <span class="qty-count-menu">${qty}</span>
-                            <button class="qty-btn-menu" onclick="addOne(${item.id})">+</button>
-                        </div>
-                    `;
-                }
-                
-                // Build the Card
-                itemDiv.innerHTML = `
-                    <div class="item-icon">${item.image}</div>
-                    <div class="item-details">
-                        <h3>${item.name}</h3>
-                        <p class="price">₹${item.price}</p>
-                    </div>
-                    ${buttonHTML}
-                `;
-                container.appendChild(itemDiv);
-            });
-            
+        function initApp() {
+            initTheme(); // Run theme check first
+            renderCategories();
+            renderMenu();
             updateTotalBar();
         }
 
-        // --- HELPER FUNCTIONS ---
+        function renderCategories() {
+            const categories = [...new Set(menuItems.map(item => item.category))];
+            const navContainer = document.getElementById('category-nav');
+            navContainer.innerHTML = '';
 
-        // Count how many of a specific item we have
-        function getQty(id) {
-            return cart.filter(i => i.id === id).length;
+            const allLink = document.createElement('a');
+            allLink.className = 'cat-link active';
+            allLink.href = '#';
+            allLink.innerText = 'All';
+            allLink.onclick = (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+                e.target.classList.add('active');
+                renderMenu('all');
+            };
+            navContainer.appendChild(allLink);
+
+            categories.forEach(cat => {
+                const link = document.createElement('a');
+                link.className = 'cat-link';
+                link.href = '#';
+                link.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
+                link.onclick = (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderMenu(cat);
+                };
+                navContainer.appendChild(link);
+            });
         }
 
-        // Add 1 item
+        function renderMenu(filterCat = 'all') {
+            const mainContainer = document.getElementById('main-menu');
+            mainContainer.innerHTML = '';
+            const categories = [...new Set(menuItems.map(item => item.category))];
+
+            categories.forEach(cat => {
+                if (filterCat !== 'all' && filterCat !== cat) return;
+
+                const sectionTitle = document.createElement('div');
+                sectionTitle.className = 'menu-section-title';
+                sectionTitle.innerText = cat.replace('_', ' ');
+                mainContainer.appendChild(sectionTitle);
+
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'menu-grid';
+
+                const catItems = menuItems.filter(item => item.category === cat);
+                catItems.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'menu-item';
+                    itemCard.dataset.search = item.name.toLowerCase();
+
+                    const qty = getQty(item.id);
+                    let btnHTML = qty === 0
+                        ? `<button class="add-btn" onclick="addOne(${item.id})">ADD</button>`
+                        : `<div class="qty-control-menu">
+                             <button class="qty-btn-menu" onclick="removeOne(${item.id})">−</button>
+                             <span class="qty-count-menu">${qty}</span>
+                             <button class="qty-btn-menu" onclick="addOne(${item.id})">+</button>
+                           </div>`;
+
+                    itemCard.innerHTML = `
+                        <div class="item-icon">${item.image}</div>
+                        <div class="item-details">
+                            <h3>${item.name}</h3>
+                            <p class="price">₹${item.price}</p>
+                        </div>
+                        ${btnHTML}
+                    `;
+                    gridDiv.appendChild(itemCard);
+                });
+                mainContainer.appendChild(gridDiv);
+            });
+        }
+
+        function filterMenu() {
+            const input = document.getElementById('searchBar').value.toLowerCase();
+            const allCards = document.querySelectorAll('.menu-item');
+            allCards.forEach(card => {
+                if (card.dataset.search.includes(input)) card.style.display = 'flex';
+                else card.style.display = 'none';
+            });
+        }
+
+        function getQty(id) { return cart.filter(i => i.id === id).length; }
+
         function addOne(id) {
             const item = menuItems.find(i => i.id === id);
             cart.push(item);
             saveAndRefresh();
         }
 
-        // Remove 1 item
         function removeOne(id) {
-            // Find index of first matching item
             const index = cart.findIndex(i => i.id === id);
-            if (index > -1) {
-                cart.splice(index, 1); // Remove it
-            }
+            if (index > -1) cart.splice(index, 1);
             saveAndRefresh();
         }
 
-        // Save to memory and refresh the screen
         function saveAndRefresh() {
             localStorage.setItem("canteen_cart", JSON.stringify(cart));
-            displayMenu(); // Re-draw buttons (so "ADD" turns into "- 1 +")
-            updateTotalBar(); // Update the price at the bottom
+            const activeLink = document.querySelector('.cat-link.active');
+            const currentFilter = activeLink ? (activeLink.innerText === 'All' ? 'all' : activeLink.innerText.toLowerCase()) : 'all';
+            renderMenu(currentFilter);
+            updateTotalBar();
         }
 
-        // Update the Bottom Bar
         function updateTotalBar() {
-            const totalSpan = document.getElementById('total-price');
+            const bar = document.getElementById('cart-bar');
+            const priceSpan = document.getElementById('total-price');
+            const countSpan = document.getElementById('total-items');
             let total = 0;
             cart.forEach(item => total += item.price);
-            totalSpan.innerText = total;
-        }
-
-        // Go to Cart Page
-        function goToCart() {
-            if (cart.length === 0) {
-                alert("Cart is empty!");
-                return;
-            }
-            window.location.href = "cart.html";
-        }
-
-        // Start the App
-        displayMenu();
-    </script>
-
-    <button onclick="resetDailyCounter()" style="margin-top: 50px; opacity: 0.3; font-size: 10px;">
-        (Manager Only: Reset Counter)
-    </button>
-    <script>
-        function resetDailyCounter() {
-            const password = prompt("Enter Manager Password:");
-            if (password === "admin123") { 
-                localStorage.setItem("canteen_order_counter", 99); 
-                alert("Counter reset!");
+            if (cart.length > 0) {
+                bar.style.display = 'flex';
+                priceSpan.innerText = total;
+                countSpan.innerText = cart.length;
+            } else {
+                bar.style.display = 'none';
             }
         }
+
+        function goToCart() { window.location.href = "cart.html"; }
+
+        // Start App
+        initApp();
     </script>
 </body>
 
