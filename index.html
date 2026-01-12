@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gwalia Canteen | Nirma</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="brand-row">
+            <div class="logo-section">
+                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" alt="Logo" class="logo-img">
+                <div class="brand-text">
+                    <h1>Gwalia Canteen</h1>
+                    <p>Nirma University</p>
+                </div>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+        <input type="text" id="searchBar" class="search-box" placeholder="Search for food..." onkeyup="filterMenu()">
+    </div>
+
+    <div id="category-nav" class="category-nav"></div>
+
+    <div id="loading-msg" style="text-align:center; padding:50px; color:#777;">Loading Menu...</div>
+
+    <div id="store-closed-msg"
+        style="display:none; background:#e63946; color:white; text-align:center; padding:15px; font-weight:bold; position:sticky; top:85px; z-index:999;">
+        🔴 STORE IS CURRENTLY CLOSED
+    </div>
+
+    <div id="main-menu"></div>
+
+    <div class="cart-section" id="cart-bar" style="display:none;">
+        <div>
+            <span style="font-size:0.8em; opacity:0.8;">Total Bill</span><br>
+            <span style="font-size:1.2em; font-weight:bold;">₹<span id="total-price">0</span></span>
+            <span style="font-size:0.8em; margin-left:5px;">(<span id="total-items">0</span> items)</span>
+        </div>
+        <button onclick="goToCart()">View Cart &gt;</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGNfaSsDoVEn9e_EEA36J7FbtDG9Zpcww",
+            authDomain: "gwalia-canteen-db.firebaseapp.com",
+            projectId: "gwalia-canteen-db",
+            storageBucket: "gwalia-canteen-db.firebasestorage.app",
+            messagingSenderId: "609249581676",
+            appId: "1:609249581676:web:9495fd520ba2681ac4d649"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.menuItems = [];
+        window.cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
+        window.isStoreOpen = true;
+
+        // 1. LISTEN TO STORE STATUS (Real-time)
+        onSnapshot(doc(db, "config", "store"), (docSnap) => {
+            if (docSnap.exists()) {
+                window.isStoreOpen = docSnap.data().isOpen;
+                toggleStoreUI();
+            }
+        });
+
+        // 2. FETCH MENU (Real-time stock updates)
+        onSnapshot(collection(db, "menu_items"), (snapshot) => {
+            window.menuItems = [];
+            snapshot.forEach((doc) => window.menuItems.push(doc.data()));
+            window.menuItems.sort((a, b) => a.id - b.id);
+            document.getElementById('loading-msg').style.display = 'none';
+            initApp();
+        });
+
+        function toggleStoreUI() {
+            const banner = document.getElementById('store-closed-msg');
+            const btns = document.querySelectorAll('.add-btn, .qty-btn-menu');
+
+            if (!window.isStoreOpen) {
+                banner.style.display = 'block';
+                btns.forEach(b => { b.disabled = true; b.style.opacity = 0.5; });
+            } else {
+                banner.style.display = 'none';
+                btns.forEach(b => { b.disabled = false; b.style.opacity = 1; });
+            }
+            renderMenu(); // Re-render to update buttons
+        }
+
+        window.initApp = function () {
+            initTheme();
+            renderCategories();
+            renderMenu();
+            updateTotalBar();
+        }
+
+        window.renderCategories = function () {
+            // (Same category logic as before, just kept simple here)
+            const categories = [...new Set(window.menuItems.map(item => item.category))];
+            const navContainer = document.getElementById('category-nav');
+            if (navContainer.innerHTML === '') { // Only render once
+                const allLink = document.createElement('a'); allLink.className = 'cat-link active'; allLink.innerText = 'All';
+                allLink.onclick = (e) => { document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active')); e.target.classList.add('active'); renderMenu('all'); };
+                navContainer.appendChild(allLink);
+                categories.forEach(cat => {
+                    const link = document.createElement('a'); link.className = 'cat-link'; link.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
+                    link.onclick = (e) => { document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active')); e.target.classList.add('active'); renderMenu(cat); };
+                    navContainer.appendChild(link);
+                });
+            }
+        }
+
+        window.renderMenu = function (filterCat) {
+            // Get current filter from active link
+            if (!filterCat) {
+                const active = document.querySelector('.cat-link.active');
+                filterCat = active && active.innerText !== 'All' ? active.innerText.toLowerCase() : 'all';
+            }
+
+            const mainContainer = document.getElementById('main-menu');
+            mainContainer.innerHTML = '';
+            const categories = [...new Set(window.menuItems.map(item => item.category))];
+
+            categories.forEach(cat => {
+                if (filterCat !== 'all' && filterCat !== cat) return;
+
+                const sectionTitle = document.createElement('div');
+                sectionTitle.className = 'menu-section-title';
+                sectionTitle.innerText = cat.replace('_', ' ');
+                mainContainer.appendChild(sectionTitle);
+
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'menu-grid';
+
+                const catItems = window.menuItems.filter(item => item.category === cat);
+                catItems.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'menu-item';
+                    itemCard.dataset.search = item.name.toLowerCase();
+
+                    const qty = getQty(item.id);
+                    // CHECK STOCK
+                    const stock = item.stock !== undefined ? item.stock : 9999;
+                    const isSoldOut = item.isAvailable === false || stock <= 0;
+
+                    // Stock Warning Label
+                    let stockLabel = "";
+                    if (!isSoldOut && stock < 20) {
+                        stockLabel = `<div style="font-size:0.7em; color:#e63946; font-weight:bold;">Only ${stock} left!</div>`;
+                    }
+
+                    let btnHTML;
+                    if (isSoldOut || !window.isStoreOpen) {
+                        btnHTML = `<button class="add-btn" style="background:var(--border); color:var(--text-sub); border-color:var(--border); cursor:not-allowed;">${!window.isStoreOpen ? 'CLOSED' : 'SOLD OUT'}</button>`;
+                    } else {
+                        btnHTML = qty === 0
+                            ? `<button class="add-btn" onclick="addOne(${item.id})">ADD</button>`
+                            : `<div class="qty-control-menu">
+                                 <button class="qty-btn-menu" onclick="removeOne(${item.id})">−</button>
+                                 <span class="qty-count-menu">${qty}</span>
+                                 <button class="qty-btn-menu" onclick="addOne(${item.id})">+</button>
+                               </div>`;
+                    }
+
+                    itemCard.innerHTML = `
+                        <div class="item-icon">${item.image}</div>
+                        <div class="item-details">
+                            <h3>${item.name}</h3>
+                            <p class="price">₹${item.price}</p>
+                            ${stockLabel}
+                        </div>
+                        ${btnHTML}
+                    `;
+                    gridDiv.appendChild(itemCard);
+                });
+                mainContainer.appendChild(gridDiv);
+            });
+        }
+
+        window.filterMenu = function () {
+            const input = document.getElementById('searchBar').value.toLowerCase();
+            document.querySelectorAll('.menu-item').forEach(card => {
+                card.style.display = card.dataset.search.includes(input) ? 'flex' : 'none';
+            });
+        }
+
+        window.getQty = function (id) { return window.cart.filter(i => i.id === id).length; }
+
+        window.addOne = function (id) {
+            const item = window.menuItems.find(i => i.id === id);
+            const currentQty = getQty(id);
+            const stock = item.stock !== undefined ? item.stock : 9999;
+
+            // --- STOCK CHECK ---
+            if (currentQty >= stock) {
+                alert(`Sorry! We only have ${stock} ${item.name} left.`);
+                return;
+            }
+
+            window.cart.push(item);
+            saveAndRefresh();
+        }
+
+        window.removeOne = function (id) {
+            const index = window.cart.findIndex(i => i.id === id);
+            if (index > -1) window.cart.splice(index, 1);
+            saveAndRefresh();
+        }
+
+        window.saveAndRefresh = function () {
+            localStorage.setItem("canteen_cart", JSON.stringify(window.cart));
+            renderMenu();
+            updateTotalBar();
+        }
+
+        window.updateTotalBar = function () {
+            const bar = document.getElementById('cart-bar');
+            let total = 0;
+            window.cart.forEach(item => total += item.price);
+            if (window.cart.length > 0) {
+                bar.style.display = 'flex';
+                document.getElementById('total-price').innerText = total;
+                document.getElementById('total-items').innerText = window.cart.length;
+            } else { bar.style.display = 'none'; }
+        }
+
+        window.goToCart = function () { window.location.href = "cart.html"; }
+
+        // THEME
+        window.initTheme = function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeBtn').innerText = '☀️'; }
+        }
+        window.toggleTheme = function () {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+
+</html>

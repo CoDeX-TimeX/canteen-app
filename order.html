@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Order Receipt</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Specific Receipt Styles */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            background-image: var(--bg-pattern);
+        }
+
+        .receipt-card {
+            background: white;
+            padding: 30px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-top: 6px solid #ff9f1c;
+            position: relative;
+            border-radius: 5px;
+            color: #333;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .receipt-card::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            width: 100%;
+            height: 10px;
+            background: radial-gradient(circle, transparent 70%, white 75%) 0 0;
+            background-size: 20px 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5em;
+            font-family: 'Poppins', sans-serif;
+            font-weight: bold;
+        }
+
+        .divider {
+            border-bottom: 2px dashed #ccc;
+            margin: 15px 0;
+        }
+
+        .item-list {
+            text-align: left;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .list-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .total {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        #qr-image {
+            margin-top: 15px;
+            width: 200px;
+            height: 200px;
+            mix-blend-mode: multiply;
+        }
+
+        .home-btn {
+            display: block;
+            margin-top: 30px;
+            text-decoration: none;
+            background: #1b263b;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="receipt-card">
+        <h1>Gwalia Canteen</h1>
+        <p style="margin:0; font-size:0.8em; color:#666;">Nirma University</p>
+
+        <div style="color:#777; font-size:0.85em; text-transform: uppercase; margin-top:10px; letter-spacing:1px;">
+            Reference Code
+        </div>
+
+        <div
+            style="font-size: 1.4em; font-weight: bold; color: #333; font-family: 'Courier New', monospace; margin-bottom: 10px;">
+            <span id="display-id">--:--</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="order-items" class="item-list">
+        </div>
+
+        <div class="divider"></div>
+        <div class="total">Total: ₹<span id="display-total">0</span></div>
+
+        <p style="font-size: 0.8em; color: #555; margin-top:15px; font-family:'Poppins', sans-serif;">
+            Show this QR at Counter
+        </p>
+
+        <img id="qr-image" src="" alt="Order QR">
+
+        <br>
+        <a href="index.html" class="home-btn" onclick="clearData()">Start New Order</a>
+    </div>
+
+    <script>
+        // --- THEME CHECK ---
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); }
+
+        // 1. Get Data
+        const cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
+        const total = localStorage.getItem("canteen_total") || 0;
+        const orderId = localStorage.getItem("canteen_id") || "----";
+
+        // 2. Display Info
+        document.getElementById("display-id").innerText = orderId;
+        document.getElementById("display-total").innerText = total;
+
+        const listContainer = document.getElementById("order-items");
+
+        // --- GROUPING LOGIC (The Fix) ---
+        // This calculates "Maggi: 2", "Tea: 1"
+        const itemCounts = {};
+
+        cart.forEach(item => {
+            if (itemCounts[item.name]) {
+                itemCounts[item.name].count++;
+                itemCounts[item.name].price += item.price; // Add to subtotal
+            } else {
+                itemCounts[item.name] = {
+                    count: 1,
+                    price: item.price
+                };
+            }
+        });
+
+        // --- DISPLAY & QR GENERATION ---
+        let qrData = `REF: ${orderId}\n----------------\n`;
+
+        // Loop through the grouped items
+        for (const [name, details] of Object.entries(itemCounts)) {
+            const row = document.createElement("div");
+            row.className = "list-row";
+
+            // If count > 1, show "Maggi x2"
+            const nameDisplay = details.count > 1 ? `${name} x${details.count}` : name;
+
+            // Update the STUDENT SCREEN
+            row.innerHTML = `<span>${nameDisplay}</span> <span>${details.price}</span>`;
+            listContainer.appendChild(row);
+
+            // Update the QR CODE (So Admin sees "Maggi x2")
+            qrData += `${nameDisplay}\n`;
+        }
+
+        qrData += `----------------\nTOTAL: ₹${total}\n[VERIFIED]`;
+
+        // 3. GENERATE QR
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
+        document.getElementById("qr-image").src = qrApiUrl;
+
+        // 4. Clear Data
+        function clearData() {
+            localStorage.removeItem("canteen_cart");
+            localStorage.removeItem("canteen_total");
+            localStorage.removeItem("canteen_id");
+        }
+    </script>
+</body>
+
+</html>

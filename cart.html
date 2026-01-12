@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Review Cart</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="brand-row" style="margin-bottom:0;">
+            <div class="brand-text">
+                <h1>🛒 Your Cart</h1>
+                <p>Review items before ordering</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+    </div>
+
+    <div class="cart-container" style="padding: 20px; max-width: 600px; margin: 0 auto;">
+
+        <div id="cart-list">
+        </div>
+
+        <div
+            style="background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); margin-top: 20px; border: 1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; color: var(--text-sub);">
+                <span>Item Total</span>
+                <span>₹<span id="sub-total">0</span></span>
+            </div>
+            <div
+                style="display:flex; justify-content:space-between; font-size: 1.3em; font-weight: bold; color: var(--text-main); border-top: 1px dashed var(--border); padding-top: 10px;">
+                <span>To Pay</span>
+                <span style="color: var(--primary);">₹<span id="final-total">0</span></span>
+            </div>
+        </div>
+
+        <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 30px;">
+            <a href="index.html" class="btn-back"
+                style="flex:1; text-align:center; padding: 15px; border-radius: 12px; background: var(--bg-color); color: var(--text-main); text-decoration:none; font-weight:600; border: 1px solid var(--border);">Add
+                More</a>
+
+            <button class="btn-confirm" onclick="confirmOrder()"
+                style="flex:2; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 15px rgba(255, 159, 28, 0.3);">
+                Confirm Order ✅
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- THEME LOGIC ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const btn = document.getElementById('themeBtn');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                btn.innerText = '☀️';
+            } else {
+                btn.innerText = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+        }
+
+        // --- CART LOGIC ---
+        let cart = JSON.parse(localStorage.getItem("canteen_cart")) || [];
+
+        function renderCart() {
+            const container = document.getElementById("cart-list");
+            const finalSpan = document.getElementById("final-total");
+            const subSpan = document.getElementById("sub-total");
+            container.innerHTML = "";
+
+            if (cart.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color: var(--text-sub); padding:40px;'>Your cart is empty!</p>";
+                finalSpan.innerText = "0";
+                subSpan.innerText = "0";
+                return;
+            }
+
+            // Group Items
+            const counts = {};
+            const uniqueItems = {};
+            cart.forEach(item => {
+                counts[item.id] = (counts[item.id] || 0) + 1;
+                uniqueItems[item.id] = item;
+            });
+
+            // Calc Total
+            let total = 0;
+            cart.forEach(item => total += item.price);
+            finalSpan.innerText = total;
+            subSpan.innerText = total;
+
+            // Generate HTML
+            Object.keys(uniqueItems).forEach(id => {
+                const item = uniqueItems[id];
+                const count = counts[id];
+
+                const row = document.createElement("div");
+                // Styling inline here to ensure it overrides defaults cleanly
+                row.style = "display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: var(--shadow); border: 1px solid var(--border);";
+
+                row.innerHTML = `
+                    <div style="display:flex; align-items:center; gap: 15px;">
+                        <span style="font-size: 2em;">${item.image}</span>
+                        <div>
+                            <h3 style="margin:0; font-size:1em; color: var(--text-main);">${item.name}</h3>
+                            <p style="margin:2px 0 0; color: var(--primary); font-weight:600;">₹${item.price}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="qty-control-menu" style="width: 100px;">
+                        <button class="qty-btn-menu" onclick="updateQty(${item.id}, -1)">−</button>
+                        <span class="qty-count-menu">${count}</span>
+                        <button class="qty-btn-menu" onclick="updateQty(${item.id}, 1)">+</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function updateQty(id, change) {
+            if (change === 1) {
+                const item = cart.find(i => i.id == id);
+                cart.push(item);
+            } else {
+                const index = cart.findIndex(i => i.id == id);
+                if (index > -1) cart.splice(index, 1);
+            }
+            localStorage.setItem("canteen_cart", JSON.stringify(cart));
+            renderCart();
+        }
+
+        function confirmOrder() {
+            if (cart.length === 0) {
+                alert("Cart is empty!");
+                return;
+            }
+
+            // --- NEW: SMART REFERENCE CODE GENERATION ---
+            // 1. Get Time parts
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0'); // e.g., "15"
+            const mins = String(now.getMinutes()).padStart(2, '0'); // e.g., "30"
+            const secs = String(now.getSeconds()).padStart(2, '0'); // e.g., "45"
+
+            // 2. Add 2 Random Digits (00-99) for extra safety
+            const random = Math.floor(Math.random() * 100);
+            const randomStr = String(random).padStart(2, '0');
+
+            // 3. Combine them: HHMMSS-RR
+            // Example Result: "153045-99"
+            const uniqueRefCode = `${hours}${mins}${secs}-${randomStr}`;
+
+            // Save everything
+            let total = 0;
+            cart.forEach(item => total += item.price);
+
+            localStorage.setItem("canteen_total", total);
+            localStorage.setItem("canteen_id", uniqueRefCode); // Save the smart code
+
+            // Go to Receipt
+            window.location.href = "order.html";
+        }
+
+        initTheme(); // Start
+        renderCart();
+    </script>
+</body>
+
+</html>
