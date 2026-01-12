@@ -1,0 +1,258 @@
+/* style.css - DARK MODE & BRANDING VERSION */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* 1. COLOR VARIABLES (The "Theme" Engine) */
+:root {
+    /* Light Mode (Default) */
+    --primary: #ff9f1c;
+    /* Gwalia Orange */
+    --accent: #2ec4b6;
+    /* Teal */
+    --bg-color: #f4f7f6;
+    --card-bg: #ffffff;
+    --text-main: #1b263b;
+    --text-sub: #777777;
+    --border: #eeeeee;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --header-bg: #ffffff;
+
+    /* Background Pattern (Subtle Dots) */
+    --bg-pattern: radial-gradient(#e0e0e0 1px, transparent 1px);
+}
+
+/* 2. DARK MODE OVERRIDES */
+body.dark-mode {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #e0e0e0;
+    --text-sub: #a0a0a0;
+    --border: #333333;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --header-bg: #1e1e1e;
+
+    /* Dark Mode Pattern */
+    --bg-pattern: radial-gradient(#333 1px, transparent 1px);
+}
+
+/* 3. CORE STYLES */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    background-image: var(--bg-pattern);
+    background-size: 20px 20px;
+    /* Spacing of the pattern */
+    margin: 0;
+    padding: 0;
+    color: var(--text-main);
+    padding-bottom: 100px;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* 4. HEADER WITH LOGO & TOGGLE */
+.header {
+    background: var(--header-bg);
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    transition: background 0.3s;
+}
+
+.brand-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    /* Placeholder color if image fails */
+    object-fit: cover;
+}
+
+.brand-text h1 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.brand-text p {
+    margin: 0;
+    font-size: 0.75em;
+    color: var(--text-sub);
+}
+
+/* Toggle Switch */
+.theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    background-color: var(--bg-color);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Search Box */
+.search-box {
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 12px;
+    background: var(--bg-color);
+    /* Matches background */
+    color: var(--text-main);
+    font-family: 'Poppins', sans-serif;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* 5. CATEGORY NAV */
+.category-nav {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 10px 20px;
+    position: sticky;
+    top: 100px;
+    z-index: 900;
+    scrollbar-width: none;
+}
+
+.category-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.cat-link {
+    padding: 8px 18px;
+    margin-right: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    color: var(--text-sub);
+    font-size: 0.85em;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.cat-link.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* 6. MENU GRID */
+.menu-section-title {
+    padding: 25px 20px 10px;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 0 20px;
+}
+
+.menu-item {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+}
+
+.item-details h3 {
+    color: var(--text-main);
+    font-size: 0.95em;
+}
+
+.price {
+    color: var(--primary);
+    /* Use Orange for price */
+    font-weight: 600;
+}
+
+/* 7. CONTROLS & FOOTER */
+.add-btn {
+    width: 100%;
+    background: var(--card-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 8px;
+    font-weight: 700;
+}
+
+.qty-control-menu {
+    background: var(--accent);
+    border-radius: 8px;
+    height: 34px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.qty-btn-menu {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.2em;
+    width: 30px;
+}
+
+.cart-section {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    width: auto;
+    background: var(--text-main);
+    /* Inverted color for contrast */
+    padding: 15px 20px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    color: var(--card-bg);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+button[onclick="goToCart()"] {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+}
